@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en" class="map-view">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Govsplice Map Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/style">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+</head>
+<body class="map-view bg-soft-cream text-deep-teal font-sans antialiased flex flex-col h-screen">
+
+    <div id="ribbon-container" class="flex-shrink-0 z-[1001] shadow-md border-b border-deep-teal/10 relative bg-soft-cream">
+        <div class="flex items-center px-4 border-b border-deep-teal/5">
+            <div class="mr-8 py-3">
+                <a href="#" class="text-xl font-extrabold text-deep-teal tracking-tighter">
+                    Gov<span class="text-accent-teal">splice</span>
+                </a>
+            </div>
+            <div id="tab-header-container" class="flex space-x-1 h-full"></div>
+        </div>
+        <div id="tool-container" class="h-20 bg-light-surface/50 flex items-center px-6"></div>
+    </div>
+
+    <div id="map" class="flex-grow w-full bg-gray-200 z-0 outline-none relative">
+        
+        <div id="sidebar-overlay">
+            <div class="sidebar-header">
+                <button class="sidebar-close-btn" onclick="closeSidebar()">✕ Close</button>
+            </div>
+            <div id="sidebar-content" class="p-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+                </div>
+        </div>
+
+        <div id="databar-overlay">
+            <div class="sidebar-header">
+                <button class="sidebar-close-btn" onclick="closeDataBar()">✕ Close</button>
+            </div>
+            <div id="databar-content" class="p-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        var userAgentIdentity = "change-me@govsplice.com";
+        
+        // --- GLOBAL STATE ---
+        let lastSearchedLocation = null; 
+        let currentPin = null;
+        let currentGeoJsonLayer = null;
+
+        let currentQueryData = {
+            ageBins: null,
+        };
+
+        let dataViewOpen = false;
+        let quieredUsingCurrentLayer = false; //have they all ready made the data vis queires using the current boundaries
+        let currentAreaQuery = null
+
+        // ==========================================
+        // 1. FORMS CONFIGURATION MODEL
+        // ==========================================
+        
+        // Updated: Supports custom style function, defaults to teal/pink if none provided
+        function renderGeoResponse(data, customStyleFn) {
+            if (currentGeoJsonLayer) map.removeLayer(currentGeoJsonLayer);
+            console.log("Rendering GeoJSON:", data);
+            
+            // Default fallback style
+            const defaultStyle = function (feature) {
+                return { color: "#5ebec4", weight: 2, opacity: 1, fillColor: "#f92c85", fillOpacity: 0.2 };
+            };
+
+            currentGeoJsonLayer = L.geoJSON(data, {
+                // Use the custom function if provided, else use default
+                style: customStyleFn || defaultStyle,
+                
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties && feature.properties.name) layer.bindPopup(feature.properties.name);
+                }
+            }).addTo(map);
+            
+            if (currentGeoJsonLayer.getBounds().isValid()) map.fitBounds(currentGeoJsonLayer.getBounds(), { padding: [50, 50] });
+        }
+
+        const formHandlers = {
+            handleTimeAnalysis: (data) => { 
+                console.log("Time Analysis GeoJSON:", data); 
+                
+                // Logic to extract style from properties
+                const timeAnalysisStyle = function(feature) {
+                    const props = feature.properties || {};
+                    return {
+                        // 1. Force Fill: Essential if GeoJSON is a LineString or not automatically detected as closed
+                        fill: true,
+
+                        // 2. Map Properties
+                        color: props['border-colour'] || "#5ebec4", 
+                        opacity: props['border-alpha'] !== undefined ? props['border-alpha'] : 1,
+                        
+                        fillColor: props['fill-colour'] || "#f92c85",
+                        fillOpacity: props['fill-alpha'] !== undefined ? props['fill-alpha'] : 0.2,
+                        
+                        weight: 2
+                    };
+                };
+
+                // Pass data AND style function, NO Alert
+                renderGeoResponse(data, timeAnalysisStyle);
+                quieredUsingCurrentLayer = false;
+                currentAreaQuery = data;
+                renderDataBar();
+            }
+        };
+
+        /**
+         * CONFIGURATION OBJECT DOCUMENTATION:
+         * * keys (e.g., 'isochrone'): Unique identifier for the form tool.
+         * * Structure:
+         * - title (string): The header text displayed in the sidebar form.
+         * - endpoint (string): The API URL where the GET request is sent.
+         * - handler (string): Name of the function in `formHandlers` to process the response.
+         * - includeLocation (boolean): If true, requires a map pin and appends lat/lon to query params.
+         * * - fields (Array): List of input objects.
+         * - id (string): The name attribute for the input (key sent to API).
+         * - label (string): Visual text displayed to the user (not used for 'hidden').
+         * - type (string): 'text', 'number', 'select', 'radio', 'checkbox', 'hidden'.
+         * - value (string): Default value. For 'checkbox', this is the value sent when checked.
+         * - placeholder (string): Helper text inside inputs.
+         * - options (Array): For 'select' and 'radio'. Can be:
+         * 1. Simple Strings: ['A', 'B'] -> Label is "A", Value is "A".
+         * 2. Objects (Alias): [{ label: 'Visual', value: 'internal_id' }]
+         */
+        const formsConfig = {
+            'isochrone': {
+                title: 'Isochrone',
+                endpoint: '/api/v1/isochrone',
+                handler: 'handleTimeAnalysis',
+                includeLocation: true,
+                fields: [
+                    // Invisible Field: logic handled in render, no UI, sends hardcoded value
+                    { id: 'eType', type: 'hidden', value: 'time' },
+
+                    // Select with Aliasing (Object structure in options)
+                    { 
+                        id: 'mode', 
+                        label: 'Mode of travel', 
+                        type: 'radio', 
+                        options: [
+                            { label: 'Drive', value: 'auto' }, 
+                            { label: 'Walk', value: 'pedestrian' },
+                            { label: 'Bicycle', value: 'bicycle' }, 
+                        ] 
+                    },
+                    
+                    { id: 'extent', label: 'Travel time (mins)', type: 'number', placeholder: 'e.g. 5' },
+                ]
+            },
+            'isodistance': {
+                title: 'Isodistance',
+                endpoint: '/api/v1/isochrone',
+                handler: 'handleTimeAnalysis',
+                includeLocation: true,
+                fields: [
+                    // Invisible Field: logic handled in render, no UI, sends hardcoded value
+                    { id: 'eType', type: 'hidden', value: 'distance' },
+
+                    // Select with Aliasing (Object structure in options)
+                    { 
+                        id: 'mode', 
+                        label: 'Mode of travel', 
+                        type: 'radio', 
+                        options: [
+                            { label: 'Drive', value: 'auto' }, 
+                            { label: 'Walk', value: 'pedestrian' },
+                            { label: 'Bicycle', value: 'bicycle' }, 
+                        ] 
+                    },
+                    
+                    { id: 'extent', label: 'Distance (km)', type: 'number', placeholder: 'e.g. 5' },
+                ]
+            }
+        };
+
+        // ==========================================
+        // 2. RIBBON CONFIG
+        // ==========================================
+        
+        /**
+         * RIBBON MENU DOCUMENTATION:
+         * * Array of Tab Objects.
+         * - id (string): Internal ID for the tab group.
+         * - label (string): Text shown on the top tab bar.
+         * - buttons (Array): List of tool buttons shown in the ribbon body.
+         * - label (string): Text under the icon.
+         * - icon (string): Emoji or text icon.
+         * - action (function): JavaScript to execute (usually openSidebar('key')).
+         */
+        const menuConfig = [
+            { 
+                id: 'area-query', label: 'Area Query', buttons: [ 
+                    { label: 'Time',     icon: '⏱️', action: () => openSidebar('isochrone') },
+                    {label:'Distance', icon:'📏', action: () => openSidebar('isodistance')}
+                ] 
+            }
+        ];
+
+        // --- Ribbon Logic ---
+        const tabContainer = document.getElementById('tab-header-container');
+        const toolContainer = document.getElementById('tool-container');
+
+        function initRibbon() {
+            menuConfig.forEach((tab, index) => {
+                const tabBtn = document.createElement('button');
+                tabBtn.innerText = tab.label;
+                tabBtn.className = 'px-6 py-3 text-sm font-semibold transition-all duration-200 outline-none';
+                tabBtn.onclick = () => switchTab(index);
+                tabContainer.appendChild(tabBtn);
+
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'hidden space-x-4 animate-fade-in'; 
+                tab.buttons.forEach(btn => {
+                    const actionBtn = document.createElement('button');
+                    actionBtn.className = 'flex flex-col items-center justify-center px-4 py-2 rounded-xl hover:bg-white hover:shadow-sm border border-transparent hover:border-deep-teal/10 transition-all duration-200 text-deep-teal group';
+                    actionBtn.innerHTML = `<span class="text-2xl mb-1 group-hover:scale-110 transition-transform">${btn.icon}</span><span class="text-xs font-medium text-deep-teal/80">${btn.label}</span>`;
+                    actionBtn.onclick = btn.action;
+                    groupDiv.appendChild(actionBtn);
+                });
+                toolContainer.appendChild(groupDiv);
+            });
+            switchTab(0);
+        }
+
+        function switchTab(activeIndex) {
+            const tabs = tabContainer.children;
+            const groups = toolContainer.children;
+            for (let i = 0; i < tabs.length; i++) {
+                if (i === activeIndex) {
+                    tabs[i].className = 'px-6 py-3 text-sm font-bold transition-all duration-200 outline-none tab-active';
+                    groups[i].classList.remove('hidden');
+                    groups[i].classList.add('flex');
+                } else {
+                    tabs[i].className = 'px-6 py-3 text-sm font-semibold transition-all duration-200 outline-none tab-inactive';
+                    groups[i].classList.add('hidden');
+                    groups[i].classList.remove('flex');
+                }
+            }
+        }
+        initRibbon();
+
+        // --- Map Setup ---
+        var map = L.map('map', { zoomControl: false }).setView([54.5, -4], 6);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+
+        // --- Geocoding Logic ---
+        let isSearchCooldown = false;
+        async function runGeocode() {
+            const input = document.getElementById('addr-input');
+            const btn = document.getElementById('search-btn');
+            const errorBox = document.getElementById('search-error-msg');
+            const query = input.value;
+            if(!query || isSearchCooldown) return;
+
+            errorBox.classList.add('hidden');
+            isSearchCooldown = true;
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            setTimeout(() => { isSearchCooldown = false; btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed'); }, 1000);
+
+            const baseUrl = "https://nominatim.openstreetmap.org/search";
+            const params = new URLSearchParams({ format: 'json', q: query, viewbox: '-10.5,60.9,2.0,49.8', email: userAgentIdentity });
+            try {
+                const response = await fetch(`${baseUrl}?${params.toString()}`);
+                const data = await response.json();
+                if (data.length > 0) {
+                    const lat = data[0].lat;
+                    const lon = data[0].lon;
+                    lastSearchedLocation = { lat: lat, lon: lon };
+                    map.setView([lat, lon], 14);
+                    if (currentPin) map.removeLayer(currentPin);
+                    currentPin = L.marker([lat, lon]).addTo(map);
+                    currentPin.bindPopup(`<div class="font-sans text-deep-teal"><b class="text-accent-teal">Found:</b><br>${data[0].display_name}</div>`).openPopup();
+                } else {
+                    showError("Location not found.");
+                }
+            } catch (err) {
+                console.error(err);
+                showError("Connection error.");
+            }
+        }
+        function showError(msg) {
+            const errorBox = document.getElementById('search-error-msg');
+            errorBox.innerText = msg;
+            errorBox.classList.remove('hidden');
+            setTimeout(() => { errorBox.classList.add('hidden'); }, 3000);
+        }
+
+        // --- Search Control ---
+        var SearchControl = L.Control.extend({
+            onAdd: function(map) {
+                var div = L.DomUtil.create('div', 'leaflet-control');
+                L.DomEvent.disableClickPropagation(div);
+                L.DomEvent.disableScrollPropagation(div);
+                div.className = "flex items-center gap-2 bg-soft-cream/95 backdrop-blur-sm p-2 rounded-xl shadow-xl border border-deep-teal/10 mb-2 ml-2 relative";
+                div.innerHTML = `
+                    <input id="addr-input" type="text" class="bg-white border border-deep-teal/20 text-deep-teal text-sm rounded-lg focus:ring-accent-teal focus:border-accent-teal block w-48 p-2 outline-none transition-all placeholder-deep-teal/40" placeholder="Search Address..." onkeydown="if(event.key === 'Enter') runGeocode()" />
+                    <button id="search-btn" onclick="runGeocode()" class="text-white bg-accent-teal hover:bg-teal-400 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-3 py-2 focus:outline-none transition duration-200 shadow-md">🔍</button>
+                    <span id="search-error-msg" class="hidden absolute left-full ml-3 top-2 bg-red-100 border border-red-200 text-red-600 text-xs px-3 py-1.5 rounded-lg whitespace-nowrap shadow-sm search-error-anim"></span>
+                `;
+                return div;
+            }
+        });
+        new SearchControl({ position: 'topleft' }).addTo(map);
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+
+//////////////////////////////////////////////////////////////////////////////////
+        // // --- Right side bar popout button
+        var VisPannelToggle = L.Control.extend({
+            onAdd: function(map) {
+                var rightdiv = L.DomUtil.create('rightdiv');
+                L.DomEvent.disableClickPropagation(rightdiv);
+                L.DomEvent.disableScrollPropagation(rightdiv);
+                rightdiv.className = "flex items-center gap-2 bg-soft-cream/95 backdrop-blur-sm p-2 rounded-xl shadow-xl border border-deep-teal/10 mb-2 ml-2 relative";
+                rightdiv.innerHTML = `
+                    <button id="dataview-btn" onclick="openDataBar()" class="text-white bg-accent-teal hover:bg-teal-400 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-3 py-2 focus:outline-none transition duration-200 shadow-md">📊</button>`;
+                return rightdiv;
+            }
+        });
+        new VisPannelToggle({ position: 'topright' }).addTo(map);
+
+        function openDataBar(){
+            console.log("open data bar");
+            const datbar = document.getElementById('databar-overlay');
+            const mapRect = document.getElementById('map').getBoundingClientRect();
+            datbar.style.display = 'flex';
+            dataViewOpen = true;
+            renderDataBar();
+        }
+
+        function closeDataBar() {
+            console.log("close data bar");
+            const datbar = document.getElementById('databar-overlay');
+            datbar.style.display = 'none';
+            dataViewOpen = false;
+        }
+
+        async function renderDataBar(){
+            const container = document.getElementById('databar-content');
+            // container.innerHTML = '<p class="text-red-500">Configuration not found for </p>';
+            // const wrapper = document.createElement('div');
+            // wrapper.className = 'mb-4';
+            //console.log("just render");
+            if (dataViewOpen == true && quieredUsingCurrentLayer == false && currentGeoJsonLayer != null){
+                console.log("actually query and render");
+                console.log(currentAreaQuery);
+                //add the query and creation of the first plot here, can
+                //make it more generalised and nicer down the line 
+                // in the spirit of doing things that dont scale
+                const response = await fetch("/api/v1/simpledemographics", {
+                    method: "POST",
+                    body: JSON.stringify(currentAreaQuery),
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+                });
+                const result = await response.json()
+                console.log("------------");
+                console.log("ACTUAL RESPONSE FROM DEMOGRAPHICS ENDPOINT");
+                console.log(result);
+                console.log("------------");
+                currentQueryData["ageBins"] = result["ageBins"];
+                console.log("currentQueryData:");
+                console.log(currentQueryData);
+                //console.log(currentGeoJsonLayer);
+
+                container.innerHTML = `<canvas id="chart-demographics-ageBins"></canvas>`;
+                var ageBinCategories = Object.keys(currentQueryData["ageBins"]);
+                var ageBinCounts = Object.values(currentQueryData["ageBins"])
+                const ageBinsChart = new Chart('chart-demographics-ageBins', {
+                    type: 'bar',
+                    data: {
+                        labels: ageBinCategories,
+                        datasets: [{
+                            label: 'Population Count',
+                            data: ageBinCounts,
+                        }]
+                    }
+                });
+
+                quieredUsingCurrentLayer = true;
+            } 
+        }
+////for reference when typing
+        // <div id="databar-overlay">
+        //     <div class="databar-header">
+        //         <button class="databar-close-btn" onclick="closeDataBar()">✕ Close</button>
+        //     </div>
+        //     <div id="databar-content" class="p-4 overflow-y-auto max-h-[calc(100vh-0px)]">
+        //         </div>
+        // </div>
+
+        // ==========================================
+        // LEFT SIDEBAR & FORM RENDERING ENGINE
+        // ==========================================
+
+        function renderSidebarForm(configKey) {
+            const container = document.getElementById('sidebar-content');
+            container.innerHTML = ''; 
+
+            const config = formsConfig[configKey];
+            if (!config) {
+                container.innerHTML = '<p class="text-red-500">Configuration not found for ' + configKey + '</p>';
+                return;
+            }
+
+            const titleEl = document.createElement('h3');
+            titleEl.className = 'font-bold text-xl mb-4 text-deep-teal';
+            titleEl.innerText = config.title;
+            container.appendChild(titleEl);
+
+            const errorContainer = document.createElement('div');
+            errorContainer.id = 'sidebar-form-error';
+            errorContainer.className = 'hidden mb-4 p-3 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600 font-semibold';
+            container.appendChild(errorContainer);
+
+            const form = document.createElement('form');
+            form.onsubmit = (e) => handleFormSubmit(e, configKey);
+            
+            config.fields.forEach(field => {
+                
+                // --- HANDLE HIDDEN FIELDS ---
+                if (field.type === 'hidden') {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = field.id;
+                    input.value = field.value || '';
+                    form.appendChild(input);
+                    return; 
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'mb-4';
+
+                // Label (Skip for checkbox as it's inline)
+                const label = document.createElement('label');
+                label.className = 'block text-sm font-medium text-deep-teal mb-1';
+                label.innerText = field.label;
+                if (field.type !== 'checkbox') wrapper.appendChild(label);
+
+                // --- TEXT / NUMBER ---
+                if (field.type === 'text' || field.type === 'number') {
+                    const input = document.createElement('input');
+                    input.type = field.type;
+                    input.name = field.id;
+                    input.className = 'sidebar-input';
+                    if (field.placeholder) input.placeholder = field.placeholder;
+                    if (field.value) input.value = field.value;
+                    wrapper.appendChild(input);
+                } 
+                
+                // --- SELECT (Handles Aliasing) ---
+                else if (field.type === 'select') {
+                    const select = document.createElement('select');
+                    select.name = field.id;
+                    select.className = 'sidebar-select';
+                    field.options.forEach(opt => {
+                        const option = document.createElement('option');
+                        
+                        // Check if option is String or Object (Alias)
+                        if (typeof opt === 'object' && opt !== null) {
+                            option.value = opt.value;
+                            option.innerText = opt.label;
+                        } else {
+                            option.value = opt;
+                            option.innerText = opt;
+                        }
+                        
+                        select.appendChild(option);
+                    });
+                    wrapper.appendChild(select);
+                }
+                
+                // --- CHECKBOX (Handles Aliasing via value attribute) ---
+                else if (field.type === 'checkbox') {
+                    wrapper.className = 'mb-4 flex items-center';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.name = field.id;
+                    input.className = 'sidebar-checkbox mr-2';
+                    
+                    // If a specific value is defined in config, use it (alias). 
+                    // Otherwise default browser behavior (usually 'on' or handled as boolean in JS).
+                    if (field.value) {
+                        input.value = field.value;
+                    }
+                    
+                    wrapper.appendChild(input);
+                    wrapper.appendChild(label);
+                    label.className = 'text-sm font-medium text-deep-teal'; 
+                }
+                
+                // --- RADIO (Handles Aliasing) ---
+                else if (field.type === 'radio') {
+                    const radioGroup = document.createElement('div');
+                    radioGroup.className = 'flex flex-col space-y-1 mt-1';
+                    
+                    field.options.forEach(opt => {
+                        const rWrapper = document.createElement('label');
+                        rWrapper.className = 'inline-flex items-center cursor-pointer';
+                        
+                        const input = document.createElement('input');
+                        input.type = 'radio';
+                        input.name = field.id;
+                        input.className = 'sidebar-radio form-radio text-accent-teal';
+
+                        const rLabel = document.createElement('span');
+                        rLabel.className = 'ml-2 text-sm text-deep-teal/80';
+                        
+                        // Check if option is String or Object (Alias)
+                        if (typeof opt === 'object' && opt !== null) {
+                            input.value = opt.value;
+                            rLabel.innerText = opt.label;
+                        } else {
+                            input.value = opt;
+                            rLabel.innerText = opt;
+                        }
+
+                        rWrapper.appendChild(input);
+                        rWrapper.appendChild(rLabel);
+                        radioGroup.appendChild(rWrapper);
+                    });
+                    wrapper.appendChild(radioGroup);
+                }
+
+                form.appendChild(wrapper);
+            });
+
+            const submitBtn = document.createElement('button');
+            submitBtn.type = 'submit';
+            submitBtn.className = 'w-full mt-4 bg-accent-teal hover:bg-teal-400 text-white font-bold py-2 px-4 rounded-xl transition duration-200';
+            submitBtn.innerText = 'Run ' + config.title;
+            form.appendChild(submitBtn);
+
+            container.appendChild(form);
+        }
+
+        async function handleFormSubmit(e, configKey) {
+            e.preventDefault();
+            const errorDiv = document.getElementById('sidebar-form-error');
+            const config = formsConfig[configKey];
+            
+            if (config.includeLocation && !lastSearchedLocation) {
+                errorDiv.innerText = "Please search for a location on the map before submitting this analysis.";
+                errorDiv.classList.remove('hidden');
+                return;
+            } else {
+                errorDiv.classList.add('hidden');
+            }
+
+            const formData = new FormData(e.target);
+            // Convert FormData to standard Object
+            // Note: Standard checkboxes not checked are omitted by FormData. 
+            // Checked checkboxes send their 'value' (if alias set) or 'on'.
+            const data = Object.fromEntries(formData.entries());
+
+            // 2. Append Location Data (ONLY IF EXPLICITLY REQUIRED)
+            if (config.includeLocation && lastSearchedLocation) {
+                data.lat = lastSearchedLocation.lat;
+                data.lon = lastSearchedLocation.lon;
+            }
+
+            try {
+                const params = new URLSearchParams(data).toString();
+                const url = `${config.endpoint}?${params}`;
+                console.log(`Sending GET request to: ${url}`);
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                const result = await response.json();
+                
+                if (formHandlers[config.handler]) formHandlers[config.handler](result);
+
+            } catch (error) {
+                console.error("Submission failed:", error);
+                errorDiv.innerText = "Request failed: " + error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function openSidebar(configKey) {
+            const sidebar = document.getElementById('sidebar-overlay');
+            const zoomControl = document.querySelector('.leaflet-control-zoom');
+            const mapRect = document.getElementById('map').getBoundingClientRect();
+            const zoomRect = zoomControl.getBoundingClientRect();
+            const relativeTop = zoomRect.top - mapRect.top;
+            sidebar.style.top = `${relativeTop}px`;
+            renderSidebarForm(configKey);
+            sidebar.style.display = 'flex';
+            zoomControl.classList.add('displaced');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar-overlay');
+            const zoomControl = document.querySelector('.leaflet-control-zoom');
+            sidebar.style.display = 'none';
+            zoomControl.classList.remove('displaced');
+        }
+
+    </script>
+</body>
+</html>

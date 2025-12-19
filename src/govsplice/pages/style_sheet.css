@@ -1,0 +1,299 @@
+/* =========================================
+   1. FONTS & VARIABLES
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+:root {
+    /* Govsplice Palette */
+    --accent-teal: #5ebec4;
+    --accent-pink: #f92c85;
+    --soft-cream: #fdf5df;
+    --deep-teal: #2C3E50;
+    --light-surface: #F4EDE0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* =========================================
+   2. CUSTOM UTILITY CLASSES
+   ========================================= */
+
+/* Text Colors */
+.text-deep-teal { color: var(--deep-teal); }
+.text-accent-teal { color: var(--accent-teal); }
+.text-accent-pink { color: var(--accent-pink); }
+.text-soft-cream { color: var(--soft-cream); }
+
+/* Background Colors */
+.bg-soft-cream { background-color: var(--soft-cream); }
+.bg-light-surface { background-color: var(--light-surface); }
+.bg-deep-teal { background-color: var(--deep-teal); }
+.bg-accent-teal { background-color: var(--accent-teal); }
+.bg-accent-pink { background-color: var(--accent-pink); }
+
+/* Borders */
+.border-light-surface { border-color: var(--light-surface); }
+.border-deep-teal { border-color: var(--deep-teal); }
+.border-accent-teal { border-color: var(--accent-teal); }
+.border-accent-pink { border-color: var(--accent-pink); }
+
+/* Opacity utilities */
+.bg-soft-cream\/95 { background-color: rgba(253, 245, 223, 0.95); }
+.bg-soft-cream\/90 { background-color: rgba(253, 245, 223, 0.90); }
+.bg-light-surface\/95 { background-color: rgba(244, 237, 224, 0.95); }
+.bg-light-surface\/50 { background-color: rgba(244, 237, 224, 0.5); }
+
+.text-deep-teal\/80 { color: rgba(44, 62, 80, 0.8); }
+.text-deep-teal\/70 { color: rgba(44, 62, 80, 0.7); }
+.text-deep-teal\/60 { color: rgba(44, 62, 80, 0.6); }
+.text-deep-teal\/40 { color: rgba(44, 62, 80, 0.4); }
+.text-deep-teal\/20 { color: rgba(44, 62, 80, 0.2); }
+.text-deep-teal\/10 { color: rgba(44, 62, 80, 0.1); }
+.text-deep-teal\/5  { color: rgba(44, 62, 80, 0.05); }
+
+.border-deep-teal\/10 { border-color: rgba(44, 62, 80, 0.1); }
+.border-deep-teal\/20 { border-color: rgba(44, 62, 80, 0.2); }
+
+/* Shadows */
+.shadow-accent-pink\/50 { box-shadow: 0 10px 15px -3px rgba(249, 44, 133, 0.5); }
+.shadow-accent-pink\/20 { box-shadow: 0 10px 15px -3px rgba(249, 44, 133, 0.2); }
+.shadow-accent-teal\/10 { box-shadow: 0 10px 15px -3px rgba(94, 190, 196, 0.1); }
+
+/* =========================================
+   3. LANDING PAGE SPECIFIC
+   ========================================= */
+.hero-bg {
+    background-color: var(--soft-cream);
+    background-image: radial-gradient(rgba(44, 62, 80, 0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* =========================================
+   4. MAP VIEWER SPECIFIC
+   ========================================= */
+
+/* Ensure full height for map */
+body.map-view, html.map-view {
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Override Leaflet Controls */
+.leaflet-bar a {
+    background-color: var(--soft-cream) !important;
+    color: var(--deep-teal) !important;
+    border-bottom: 1px solid rgba(44, 62, 80, 0.2) !important;
+}
+.leaflet-bar a:hover {
+    background-color: var(--light-surface) !important;
+    color: var(--accent-teal) !important;
+}
+
+/* Ribbon Tab States */
+.tab-active {
+    color: var(--deep-teal);
+    border-bottom: 3px solid var(--accent-teal);
+    background-color: var(--light-surface);
+}
+
+.tab-inactive {
+    color: rgba(44, 62, 80, 0.7);
+    border-bottom: 3px solid transparent;
+}
+.tab-inactive:hover {
+    background-color: var(--light-surface);
+}
+
+/* Search Box Animations */
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateX(-5px); } 
+    to { opacity: 1; transform: translateX(0); } 
+}
+.search-error-anim { 
+    animation: fadeIn 0.3s ease-in-out; 
+}
+
+/* Add this to your style definitions, perhaps under section 4. MAP VIEWER SPECIFIC */
+
+/* === Leaflet Control Displacement === */
+
+/* Target the zoom control when it has the 'displaced' class */
+.leaflet-control-zoom.displaced {
+    /* Set the new position to move it away from the left edge */
+    /* Use a value slightly greater than your sidebar's min-width (300px) */
+    left: 0px !important; 
+    
+    /* Optional: Add a transition for a smooth visual effect */
+    transition: left 0.3s ease-out;
+}
+
+/* Also add the transition to the default state for smooth return */
+.leaflet-control-zoom {
+    transition: left 0.3s ease-out;
+}
+
+/* =========================================
+   5. SIDEBAR OVERLAY & FORMS
+   ========================================= */
+
+#sidebar-overlay {
+    position: absolute;
+    left: 0;
+    /* Top is calculated via JS to match zoom buttons */
+    bottom: 0;
+    width: 25vw;
+    min-width: 300px;
+    max-width: 400px;
+    
+    /* Theme Styling */
+    background-color: var(--soft-cream); 
+    border-right: 1px solid rgba(44, 62, 80, 0.1); 
+    border-top: 1px solid rgba(44, 62, 80, 0.1);
+    box-shadow: 4px 0 15px -3px rgba(0, 0, 0, 0.1);
+    
+    z-index: 2000;
+    display: none; 
+    flex-direction: column;
+}
+
+#databar-overlay {
+    position: absolute;
+    right: 0;
+    /* Top is calculated via JS to match zoom buttons */
+    top: 0;
+    width: 25vw;
+    height: 100vh;
+    min-width: 300px;
+    max-width: 400px;
+    
+    /* Theme Styling */
+    background-color: var(--soft-cream); 
+    border-right: 1px solid rgba(44, 62, 80, 0.1); 
+    border-top: 1px solid rgba(44, 62, 80, 0.1);
+    box-shadow: 4px 0 15px -3px rgba(0, 0, 0, 0.1);
+    
+    z-index: 2000;
+    display: none; 
+    flex-direction: column;
+}
+
+/* The Header within the sidebar (for the close button) */
+.sidebar-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+    border-bottom: 1px solid rgba(44, 62, 80, 0.05);
+    background-color: rgba(253, 245, 223, 0.5);
+}
+
+/* Close Button Styling */
+.sidebar-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--deep-teal);
+    font-weight: bold;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    font-size: 0.85rem;
+}
+
+.sidebar-close-btn:hover {
+    background-color: rgba(44, 62, 80, 0.1);
+    color: var(--accent-pink);
+}
+
+/* SIDEBAR FORM ELEMENTS */
+
+/* Standard Text/Number Input */
+.sidebar-input {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(44, 62, 80, 0.2);
+    background-color: #ffffff;
+    color: var(--deep-teal);
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.sidebar-input:focus {
+    border-color: var(--accent-teal);
+    box-shadow: 0 0 0 2px rgba(94, 190, 196, 0.2);
+}
+
+.sidebar-input::placeholder {
+    color: rgba(44, 62, 80, 0.4);
+}
+
+/* Select Dropdown */
+.sidebar-select {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(44, 62, 80, 0.2);
+    background-color: #ffffff;
+    color: var(--deep-teal);
+    font-size: 0.875rem;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    /* Custom arrow styling if needed, but defaults work for MVP */
+}
+
+.sidebar-select:focus {
+    border-color: var(--accent-teal);
+    box-shadow: 0 0 0 2px rgba(94, 190, 196, 0.2);
+}
+
+/* Checkboxes */
+.sidebar-checkbox {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--deep-teal);
+    accent-color: var(--accent-teal);
+    cursor: pointer;
+}
+
+/* Radio Buttons */
+.sidebar-radio {
+    width: 1rem;
+    height: 1rem;
+    border-color: var(--deep-teal);
+    accent-color: var(--accent-teal);
+    cursor: pointer;
+}
+
+
+/* DISPLACEMENT LOGIC 
+   We target the Leaflet Zoom Control specifically.
+*/
+.leaflet-control-zoom {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* When this class is added via JS, the buttons move right */
+.leaflet-control-zoom.displaced {
+    /* Matches width of sidebar + gap */
+    transform: translateX(calc(25vw + 10px));
+}
+
+@media (min-width: 1600px) {
+    .leaflet-control-zoom.displaced {
+        transform: translateX(410px);
+    }
+}
+@media (max-width: 600px) {
+    .leaflet-control-zoom.displaced {
+        transform: translateX(310px);
+    }
+}

@@ -1,0 +1,36 @@
+[project]
+name = "govsplice"
+version = "0.1.0"
+description = "Public data for public benefit! A self hosted webapp to gain insights, not raw data, from gov.uk data."
+authors = [{name="praxcom", email="208060600+praxcom@users.noreply.github.com" }]
+requires-python = ">=3.12"
+readme="README.md"
+license-files = ["LICENSE"]
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "pytest",
+    "fastapi",
+    "uvicorn",
+    "jinja2",
+    "jupyterlab",
+    "geopandas",
+    "pyvalhalla",
+    "contextily",
+    "wget",
+]
+
+[project.scripts]
+govsplice = "govsplice.cli:run"
+
+[project.urls]
+Homepage = "https://github.com/praxcom/govsplice"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["govsplice"]
