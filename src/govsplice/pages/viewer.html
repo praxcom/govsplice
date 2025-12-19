@@ -365,7 +365,7 @@
                 //add the query and creation of the first plot here, can
                 //make it more generalised and nicer down the line 
                 // in the spirit of doing things that dont scale
-                const response = await fetch("/api/v1/simpledemographics", {
+                const response = await fetch("/api/v1/simple_age_bins", {
                     method: "POST",
                     body: JSON.stringify(currentAreaQuery),
                     headers: {

@@ -26,9 +26,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         app.state.topPath / "pages" / "landing.html"
     )
     app.state.viewerPagePath = app.state.topPath / "pages" / "viewer.html"
-    app.state.styleSheetPath = (
-        app.state.topPath / "pages" / "style_sheet.css"
-    )
+    app.state.styleSheetPath = app.state.topPath / "pages" / "style.css"
     if not app.state.Debug.DEBUG_RELOAD_FILES:
         app.state.Debug.log(
             "main.lifespan, DEBUG_RELOAD_FILES==False so loading static files upfront"

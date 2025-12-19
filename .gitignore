@@ -207,8 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 #Data 
-*data/*
-!*/data/.gitkeep
-!*/data/*template*
+src/govsplice/data/
+!src/govsplice/data/**/.gitkeep
+!src/govsplice/data/**/*template*
 duplicateways.txt
-config/valhalla.json
