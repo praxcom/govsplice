@@ -40,8 +40,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             path=app.state.styleSheetPath, media_type="text/css"
         )
 
-    # TODO: CHANGE THE INITIALISATIONS HERE SO THAT THIS IS PERFORMED THROUGH A DATA ADAPTER, NOT DIRECT USING LSOA METHODS
-    # NOR DIRECTLY ACCESSING VALHALLAH!! THE MAIN MODULE SHOULD JUST BE A MESSAGE PASSER WITH A BIT OF LOGIC
     app.state.tilePath = (
         app.state.topPath
         / "data"
@@ -160,10 +158,5 @@ async def simple_age_bins(jsonQuery: Request) -> JSON:
         inside the specified boundary.
     """
     queryArea = await jsonQuery.json()
-
-    # TODO: CHANGE THE CALL HERE SO IT IS TO THE DATABASE ADAPTER NOT DIRECTLY SPECIFYING LSOA
     ageBins = app.state.database.intersect_lsoa_age_bins(queryArea)
     return {"ageBins": ageBins}
-
-
-# TODO: ADD ENPOINT THAT WILL SET THE USER AGENT TO SOMETHING UNIQUE FOR THE USE OF OSM API
