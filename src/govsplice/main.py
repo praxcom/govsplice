@@ -5,7 +5,7 @@ from pathlib import Path
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 
 import valhalla
@@ -17,8 +17,7 @@ from .types import GeoJSON, JSON, AsyncGenerator
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Create a persistent context across all async FastAPI endpoints."""
-    app.state.Debug = config.Debug()
-    app.state.Debug.log("main.lifespan, Starting server")
+    config.Debug.log("main.lifespan, Starting server")
 
     app.state.topPath = Path(__file__).parent
 
@@ -27,8 +26,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     app.state.viewerPagePath = app.state.topPath / "pages" / "viewer.html"
     app.state.styleSheetPath = app.state.topPath / "pages" / "style.css"
-    if not app.state.Debug.DEBUG_RELOAD_FILES:
-        app.state.Debug.log(
+    if not config.Debug.DEBUG_RELOAD_FILES:
+        config.Debug.log(
             "main.lifespan, DEBUG_RELOAD_FILES==False so loading static files upfront"
         )
         app.state.landingPageHTML = FileResponse(
@@ -50,18 +49,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         / "united-kingdom-latest.osm.pbf.tar"
     )
     if not app.state.tilePath.exists():
-        app.state.Debug.log(
+        config.Debug.log(
             "main.lifespan, Downloading OSM and building valhallah tiles, get read to wait a while!"
         )
         data.PBFTools.get_pbf()
         data.PBFTools.build_valhalla_tar()
-        app.state.Debug.log(
+        config.Debug.log(
             "main.lifespan, Finished building valhallah tiles"
         )
     else:
-        app.state.Debug.log("main.lifespan, Valhallah tiles found locally")
+        config.Debug.log("main.lifespan, Valhallah tiles found locally")
 
-    app.state.Debug.log("main.lifespan, Setting Valhalla actor")
+    config.Debug.log("main.lifespan, Setting Valhalla actor")
     valConfig = valhalla.get_config(
         tile_extract=str(app.state.tilePath),
         tile_dir=str(app.state.tilePath.parent),
@@ -69,12 +68,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     app.state.valActor = valhalla.Actor(valConfig)
 
-    app.state.Debug.log("main.lifespan, Starting database")
+    config.Debug.log("main.lifespan, Starting database")
     app.state.database = database.GovspliceDB(app.state.topPath)
     app.state.database.load_lsoa_geojson()
     app.state.database.load_lsoa_age_bins()
 
-    app.state.Debug.log("main.lifespan, Finished setting up server")
+    config.Debug.log("main.lifespan, Finished setting up server")
 
     yield
 
@@ -85,7 +84,7 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/", response_class=FileResponse)
 async def landing_page() -> FileResponse:
     """Return the logged-out single page file."""
-    if app.state.Debug.DEBUG_RELOAD_FILES:
+    if config.Debug.DEBUG_RELOAD_FILES:
         app.state.landingPageHTML = FileResponse(
             path=app.state.landingPagePath, media_type="text/html"
         )
@@ -95,7 +94,7 @@ async def landing_page() -> FileResponse:
 @app.get("/viewer", response_class=FileResponse)
 async def viewer_page() -> FileResponse:
     """Return the logged-in single page file."""
-    if app.state.Debug.DEBUG_RELOAD_FILES:
+    if config.Debug.DEBUG_RELOAD_FILES:
         app.state.viewerPageHTML = FileResponse(
             path=app.state.viewerPagePath, media_type="text/html"
         )
@@ -105,7 +104,7 @@ async def viewer_page() -> FileResponse:
 @app.get("/style", response_class=FileResponse)
 async def style_sheet() -> FileResponse:
     """Return the global CSS file shared across all files."""
-    if app.state.Debug.DEBUG_RELOAD_FILES:
+    if config.Debug.DEBUG_RELOAD_FILES:
         app.state.globalStyleSheetCSS = FileResponse(
             path=app.state.styleSheetPath, media_type="text/css"
         )
