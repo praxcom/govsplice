@@ -5,7 +5,7 @@ description = "Public data for public benefit! A self hosted webapp to gain insi
 authors = [{name="praxcom", email="208060600+praxcom@users.noreply.github.com" }]
 requires-python = ">=3.12"
 readme="README.md"
-license-files = ["LICENSE"]
+license = "AGPL-3.0-only"
 dependencies = [
     "numpy",
     "pandas",
