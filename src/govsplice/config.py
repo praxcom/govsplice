@@ -5,6 +5,7 @@ from datetime import datetime
 
 from pathlib import Path
 
+from govsplice import data
 
 class Debug:
     """Container for configs that impact debug behaviour.
@@ -51,3 +52,8 @@ def build_valhala_config() -> None:
         template = f.read()
     with open(configPath, "w") as f:
         f.write(template.replace("$VALPATH", str(tileDir)))
+
+
+DATASET_MAPPINGS = {
+    "simple_age_bins":data.Stat_AgeGenderBands2021
+}
