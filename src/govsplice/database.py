@@ -7,15 +7,17 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon
 
-from .types import JSON, GeoJSON
+from govsplice.local_types import JSON, GeoJSON
+from govsplice import data, config
 
-
-class GovspliceDB:
+class DataBase:
     """Main container for the state and operations upon the datasets that can be served by the Govsplice application.
+
+    Serves as the abstraction layer between the web endpoints and the actual analyses that need to be done.
 
     Attributes
     ----------
-    - topPath: Usually the path object for the package directory, alternativly the parent directory to the data directory.
+    - topPath: Usually the path object for the package directory, alternativley the parent directory to the data directory.
     """
 
     def __init__(self, topPath: Path) -> None:
@@ -23,75 +25,24 @@ class GovspliceDB:
         Parameters
         ----------
         - topPath: Usually the path object for the package directory, alternativly the parent directory to the data directory.
+        - dataSources: A dictionary of the dataset mapping keywords to initialised objects of data sources.
         """
         self.topPath = topPath
+        self.dataSources = {}
+        for dataset in config.DATASET_MAPPINGS:
+            self.dataSources[dataset] = config.DATASET_MAPPINGS[dataset]()
+            self.dataSources[dataset]._setup_data()
 
-    def load_lsoa_geojson(self) -> None:
-        """Load in LSOA boundaries."""
-        filePath = self.topPath / "data" / "bounded" / "lsoa_2021.geojson"
-        self.lsoaBounds = gpd.GeoDataFrame.from_file(filePath)
+    def area_stats(self, queryArea: GeoJSON, dataset: str) -> JSON:
+        """Query a metric over one or more geospatial boundaries.
 
-    def load_lsoa_age_bins(self) -> None:
-        """Load in LSOA age band data."""
-        filePath = (
-            self.topPath
-            / "data"
-            / "bounded"
-            / "age_bands_lsoa21_year2024.csv"
-        )
-        self.lsoaAgeBins = gpd.GeoDataFrame.from_file(filePath)
+        Parameters
+        ----------
+        - queryArea: One spatial boundary to return statisics with.
+        - dataset: The keyword for the statistic being requested.
 
-    def intersect_lsoa_age_bins(self, query: GeoJSON) -> JSON:
-        """Query a provided boundary for population age bands."""
-
-        queryDF = gpd.GeoDataFrame.from_features(query)
-        queryDF.geometry = queryDF.geometry.map(Polygon)
-        queryDF.set_crs("EPSG:4326", inplace=True)
-
-        targetCols = [
-            "Total",
-            "F0-15",
-            "F16-29",
-            "F30-44",
-            "F45-64",
-            "F65+",
-            "M0-15",
-            "M16-29",
-            "M30-44",
-            "M45-64",
-            "M65+",
-        ]
-
-        for col in targetCols:
-            if col in self.lsoaAgeBins.columns:
-                self.lsoaAgeBins[col] = pd.to_numeric(
-                    self.lsoaAgeBins[col], errors="coerce"
-                ).fillna(0)
-
-        if self.lsoaBounds.crs is None:
-            self.lsoaBounds = self.lsoaBounds.set_crs("EPSG:4326")
-        if queryDF.crs is None:
-            queryDF = queryDF.set_crs("EPSG:4326")
-
-        merged = self.lsoaBounds.merge(self.lsoaAgeBins, on="LSOA21CD")
-
-        targetCRS = "EPSG:27700"
-        lsoaProj = merged.to_crs(targetCRS)
-        queryProj = queryDF.to_crs(targetCRS)
-
-        lsoaProj["area"] = lsoaProj.geometry.area
-
-        intersection = gpd.overlay(lsoaProj, queryProj, how="intersection")
-
-        intersection["intersection"] = intersection.geometry.area
-        intersection["ratio"] = (
-            intersection["intersection"] / intersection["area"]
-        )
-
-        finalCounts = {}
-        for col in targetCols:
-            if col in intersection.columns:
-                weigtedVals = intersection[col] * intersection["ratio"]
-                finalCounts[col] = float(weigtedVals.sum())
-
-        return finalCounts
+        Returns
+        -------
+        - JSON object containing the data for the region queries. Structure depends on the metric requested.
+        """
+        return self.dataSources[dataset].intersection(queryArea)

@@ -5,12 +5,13 @@ from pathlib import Path
 import subprocess
 import sys
 import requests
+import json
 
 import pandas as pd
 import geopandas as gpd
+from shapely.geometry import Polygon
 
 import wget
-
 
 from govsplice import config
 from govsplice.local_types import JSON, GeoJSON
@@ -213,15 +214,18 @@ class Base_BoundedStatistic:
     
     def _setup_data(self) -> None:
         """Initialise each of the components of the dataset if not already manually done."""
-        if not self.rawStats:
+        if self.rawStats is None:
             self.load_stats()
             
-        if not self.rawBounds:
+        if self.rawBounds is None:
             self.load_boundaries()
+            if self.rawBounds.crs is None:
+                self.rawBounds.set_crs("EPSG:4326", inplace=True)
 
-        if not self.data:
-            self.data = self.rawStats.merge(self.rawBounds, on=self.key)
+        if self.data is None:
+            self.data = self.rawBounds.merge(self.rawStats, on=self.key)
             self.data = self.data.to_crs("EPSG:27700")
+            self.data["area"] = self.data.geometry.area
     
     def intersection(self, queryBoundary: GeoJSON) -> JSON:
         """Calculate the intersection of a query boundary over the top of the bounded statistics.
@@ -235,11 +239,20 @@ class Base_BoundedStatistic:
         - The weighted intersection of the bounded datasets's target columns.
         """
         self._setup_data()
+        queryBoundary = gpd.GeoDataFrame.from_features(queryBoundary)
+        queryBoundary.geometry = queryBoundary.geometry.map(Polygon)
+        queryBoundary.set_crs("EPSG:4326", inplace=True)
         queryBoundary = queryBoundary.to_crs("EPSG:27700")
+
+        for col in self.targetCols:
+            self.data[col] = pd.to_numeric(
+                self.data[col], 
+                errors='coerce'
+                ).fillna(0)
 
         intersect = gpd.overlay(self.data, queryBoundary, how="intersection")
         intersect["intersection"] = intersect.geometry.area
-        intersect["ratio"] = (intersect["intersection"] / intersect["area"])
+        intersect["ratio"] = intersect["intersection"] / intersect["area"]
     
         finalCounts = {}
         for col in self.targetCols:
@@ -262,10 +275,10 @@ class Boundary_LSOACensus2021(Base_BoundedStatistic):
         raw = self._geoportal_pagination_request(1998)
         joined = self._join_geojson(raw)
         with open(self.boundaryFilePath, 'w') as f:
-            f.write(str(joined))
+            json.dump(joined, f, indent=4)
+            #f.write(str(joined))
         config.Debug.log("data.Boundary_LSOACensus2021.download_boundaries, LSOA bounds saved to local")
         
-
     def load_boundaries(self):
         """Load the LSOA 2021 boundaries into a GeoDataFrame."""
         config.Debug.log("data.Stat_AgeGenderBands2021.load_stats, Loading local boundaries for 2021 LSOA bounds.")

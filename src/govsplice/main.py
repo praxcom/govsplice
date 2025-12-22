@@ -10,8 +10,8 @@ from fastapi.responses import FileResponse
 
 import valhalla
 
-from . import config, data, database
-from .types import GeoJSON, JSON, AsyncGenerator
+from govsplice import config, data, database
+from govsplice.local_types import GeoJSON, JSON, AsyncGenerator
 
 
 @asynccontextmanager
@@ -67,10 +67,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.valActor = valhalla.Actor(valConfig)
 
     config.Debug.log("main.lifespan, Starting database")
-    app.state.database = database.GovspliceDB(app.state.topPath)
-    app.state.database.load_lsoa_geojson()
-    app.state.database.load_lsoa_age_bins()
-
+    app.state.database = database.DataBase(app.state.topPath)
     config.Debug.log("main.lifespan, Finished setting up server")
 
     yield
@@ -158,5 +155,4 @@ async def simple_age_bins(jsonQuery: Request) -> JSON:
         inside the specified boundary.
     """
     queryArea = await jsonQuery.json()
-    ageBins = app.state.database.intersect_lsoa_age_bins(queryArea)
-    return {"ageBins": ageBins}
+    return {"simple_age_bins":app.state.database.area_stats(queryArea, "simple_age_bins")}
