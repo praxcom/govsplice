@@ -377,14 +377,14 @@
                 console.log("ACTUAL RESPONSE FROM DEMOGRAPHICS ENDPOINT");
                 console.log(result);
                 console.log("------------");
-                currentQueryData["ageBins"] = result["ageBins"];
-                console.log("currentQueryData:");
+                currentQueryData["simple_age_bins"] = result["simple_age_bins"];
+                console.log("THE currentQueryData:");
                 console.log(currentQueryData);
-                //console.log(currentGeoJsonLayer);
-
+                
                 container.innerHTML = `<canvas id="chart-demographics-ageBins"></canvas>`;
-                var ageBinCategories = Object.keys(currentQueryData["ageBins"]);
-                var ageBinCounts = Object.values(currentQueryData["ageBins"])
+                var ageBinCategories = Object.keys(currentQueryData["simple_age_bins"]);
+                var ageBinCounts = Object.values(currentQueryData["simple_age_bins"])
+                console.log(ageBinCounts)
                 const ageBinsChart = new Chart('chart-demographics-ageBins', {
                     type: 'bar',
                     data: {
