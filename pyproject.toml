@@ -7,19 +7,23 @@ requires-python = ">=3.12"
 readme="README.md"
 license = "AGPL-3.0-only"
 dependencies = [
-    "numpy",
-    "pandas",
-    "matplotlib",
-    "pytest",
-    "fastapi",
-    "uvicorn",
-    "jinja2",
-    "jupyterlab",
-    "geopandas",
-    "pyvalhalla",
-    "contextily",
-    "wget",
-    "openpyxl"
+    "numpy==2.3.5",
+    "pandas==2.3.3",
+    "matplotlib==3.10.8",
+    "pytest==9.0.2",
+    "fastapi==0.124.4",
+    "uvicorn[standard]==0.38.0",
+    "jinja2==3.1.6",
+    "jupyterlab==4.5.1",
+    "geopandas==1.1.1",
+    "pyvalhalla==3.6.1",
+    "contextily==1.7.0",
+    "wget==3.2",
+    "openpyxl==3.1.5",
+    "python-multipart==0.0.21",
+    "python-jose[cryptography]==3.5.0",
+    "passlib[bcrypt]==1.7.4",
+    "bcrypt<4.0",
 ]
 
 [project.scripts]

@@ -2,17 +2,20 @@
 """This module contains the FastAPI endpoints."""
 
 from pathlib import Path
-
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.responses import FileResponse
+from fastapi.security import OAuth2PasswordRequestForm
+
+from datetime import datetime, timedelta
 
 import valhalla
 
 from govsplice import config, data, database
 from govsplice.local_types import GeoJSON, JSON, AsyncGenerator
 
+from govsplice.users import Token, auth_user, create_access_token, User, get_current_subscribed_user, db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -73,7 +76,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan)#, docs_url=None, redoc_url=None)
 
 
 @app.get("/", response_class=FileResponse)
@@ -86,8 +89,8 @@ async def landing_page() -> FileResponse:
     return app.state.landingPageHTML
 
 
-@app.get("/viewer", response_class=FileResponse)
-async def viewer_page() -> FileResponse:
+@app.get("/viewer", response_class=FileResponse)#, response_model=User)
+async def viewer_page(current_user: User = Depends(get_current_subscribed_user)) -> FileResponse:
     """Return the logged-in single page file."""
     if config.Debug.DEBUG_RELOAD_FILES:
         app.state.viewerPageHTML = FileResponse(
@@ -108,7 +111,7 @@ async def style_sheet() -> FileResponse:
 
 @app.get("/api/v1/isochrone")
 async def isochrone(
-    eType: str, mode: str, extent: float, lat: float, lon: float
+    eType: str, mode: str, extent: float, lat: float, lon: float, current_user: User = Depends(get_current_subscribed_user)
 ) -> GeoJSON:
     """Get an isochrone or isodistance geoJson boundary.
 
@@ -142,7 +145,7 @@ async def isochrone(
 
 
 @app.post("/api/v1/simple_age_bins")
-async def simple_age_bins(jsonQuery: Request) -> JSON:
+async def simple_age_bins(jsonQuery: Request, current_user: User = Depends(get_current_subscribed_user)) -> JSON:
     """Returns counts of male and female (& total) in different age categories for a queried boundary.
 
     Parameters
@@ -156,3 +159,11 @@ async def simple_age_bins(jsonQuery: Request) -> JSON:
     """
     queryArea = await jsonQuery.json()
     return {"simple_age_bins":app.state.database.area_stats(queryArea, "simple_age_bins")}
+
+@app.post("/api/v1/token", response_model=Token)
+async def login_for_access_token(formData: OAuth2PasswordRequestForm = Depends()):
+    user = auth_user(db, formData.username, formData.password)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    access_token = create_access_token(data={"sub":user.username})
+    return {"access_token":access_token, "token_type":"bearer"}

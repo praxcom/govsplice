@@ -3,3 +3,6 @@ Public data for public benefit! A self hosted webapp to gain insights, not raw d
 
 ## Documentation 
 [Resources](docs/resources.md): Interesting & potentially useful resources influencing Govsplice
+
+
+TO GET SECRET KEY:`openssl rand -hex 32`
