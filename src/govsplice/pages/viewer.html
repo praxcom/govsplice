@@ -13,6 +13,11 @@
 <body class="map-view bg-soft-cream text-deep-teal font-sans antialiased flex flex-col h-screen">
 
     <div id="ribbon-container" class="flex-shrink-0 z-[1001] shadow-md border-b border-deep-teal/10 relative bg-soft-cream">
+        <div class="flex justify-end px-4 pt-1">
+        <a href="/api/v1/logout" class="font-sans text-[12px] font-bold text-deep-teal hover:text-accent-pink transition-colors tracking-wider">
+            Sign Out
+        </a>
+    </div>
         <div class="flex items-center px-4 border-b border-deep-teal/5">
             <div class="mr-8 py-3">
                 <a href="#" class="text-xl font-extrabold text-deep-teal tracking-tighter">
@@ -20,7 +25,7 @@
                 </a>
             </div>
             <div id="tab-header-container" class="flex space-x-1 h-full"></div>
-        </div>
+            </div>
         <div id="tool-container" class="h-20 bg-light-surface/50 flex items-center px-6"></div>
     </div>
 

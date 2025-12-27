@@ -6,7 +6,6 @@
     <title>Govsplice - Open-Core Geospatial Software</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link rel="stylesheet" href="/style">
 </head>
 <body class="bg-soft-cream text-deep-teal font-sans antialiased">
@@ -16,26 +15,16 @@
             <a href="#" class="text-2xl font-extrabold text-deep-teal tracking-tighter">
                 Gov<span class="text-accent-teal">splice</span>
             </a>
-            <nav class="hidden md:flex space-x-8">
+            <nav class="hidden md:flex space-x-8 items-center">
                 <a href="#product" class="text-sm font-medium text-deep-teal hover:text-accent-teal transition duration-200">Product</a>
                 <a href="#pricing" class="text-sm font-medium text-deep-teal hover:text-accent-teal transition duration-200">Pricing</a>
                 <a href="#resources" class="text-sm font-medium text-deep-teal hover:text-accent-teal transition duration-200">Resources</a>
-                <a href="#community" class="text-sm font-medium text-deep-teal hover:text-accent-teal transition duration-200">Community</a>
-                <a href="#contact" class="text-sm font-medium text-deep-teal hover:text-accent-teal transition duration-200">Contact</a>
+                <a href="#get-started" class="text-sm font-semibold text-deep-teal hover:text-accent-teal transition duration-200">Login</a>
+                <a href="#get-started" class="px-5 py-2 bg-deep-teal text-soft-cream rounded-lg text-sm font-bold hover:bg-teal-700 transition">Sign Up</a>
             </nav>
-            <div class="hidden md:inline-block w-24"></div>
             <button id="mobile-menu-button" class="md:hidden p-2 rounded-lg hover:bg-light-surface transition duration-200 text-deep-teal" aria-label="Toggle Menu">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
             </button>
-        </div>
-        <div id="mobile-menu" class="hidden md:hidden bg-light-surface/95 backdrop-blur-sm border-t border-deep-teal/10">
-            <nav class="px-2 pt-2 pb-3 space-y-1">
-                <a href="#product" class="block px-3 py-2 rounded-md text-base font-medium text-deep-teal hover:bg-soft-cream transition duration-200">Product</a>
-                <a href="#pricing" class="block px-3 py-2 rounded-md text-base font-medium text-deep-teal hover:bg-soft-cream transition duration-200">Pricing</a>
-                <a href="#resources" class="block px-3 py-2 rounded-md text-base font-medium text-deep-teal hover:bg-soft-cream transition duration-200">Resources</a>
-                <a href="#community" class="block px-3 py-2 rounded-md text-base font-medium text-deep-teal hover:bg-soft-cream transition duration-200">Community</a>
-                <a href="#contact" class="block px-3 py-2 rounded-md text-base font-medium text-deep-teal hover:bg-soft-cream transition duration-200">Contact</a>
-            </nav>
         </div>
     </header>
 
@@ -50,48 +39,12 @@
                         Stop overpaying for slow, complex mapping software. Get deep, fast insights with our open-core platform.
                     </p>
                     <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                        <a href="#pricing" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-xl shadow-lg text-soft-cream bg-accent-pink hover:bg-fuchsia-400 transition duration-300 transform hover:scale-[1.02] shadow-accent-pink/50">
+                        <a href="#get-started" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-xl shadow-lg text-soft-cream bg-accent-pink hover:bg-fuchsia-400 transition duration-300 transform hover:scale-[1.02] shadow-accent-pink/50">
                             Get Started
                         </a>
                         <a href="#product" class="inline-flex items-center justify-center px-8 py-3 border-2 border-deep-teal/40 text-base font-medium rounded-xl text-deep-teal hover:bg-light-surface transition duration-300 transform hover:scale-[1.02]">
                             Learn More
                         </a>
-                    </div>
-                </div>
-
-                <div class="mt-20 relative">
-                    <div class="bg-light-surface border border-deep-teal/20 rounded-2xl p-4 shadow-xl shadow-deep-teal/5">
-                        <div class="h-6 bg-deep-teal/10 rounded-t-lg flex items-center px-3 space-x-2">
-                            <span class="w-3 h-3 bg-red-400 rounded-full"></span>
-                            <span class="w-3 h-3 bg-yellow-400 rounded-full"></span>
-                            <span class="w-3 h-3 bg-green-400 rounded-full"></span>
-                        </div>
-                        <div class="p-8 h-80 sm:h-96 w-full text-left">
-                            <p class="text-accent-teal font-mono text-xs mb-2">$ Govsplice run --analysis "urban_heat_island"</p>
-                            <div class="grid grid-cols-4 gap-1 h-3/4">
-                                <div class="col-span-3 bg-soft-cream rounded-lg p-3 relative shadow-inner shadow-deep-teal/5">
-                                    <div class="text-xs text-deep-teal/50">
-                                        <div class="h-2 w-3/4 bg-deep-teal/10 rounded mb-2"></div>
-                                        <div class="h-2 w-1/2 bg-deep-teal/10 rounded"></div>
-                                    </div>
-                                    <div class="absolute inset-0 opacity-20">
-                                        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-                                            <path d="M 10 10 Q 50 20, 90 10" stroke="#5ebec4" stroke-width="0.5" fill="none" />
-                                            <path d="M 15 30 L 85 70" stroke="#5ebec4" stroke-width="0.5" fill="none" />
-                                            <path d="M 50 90 A 40 40 0 0 1 70 50" stroke="#5ebec4" stroke-width="0.5" fill="none" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="col-span-1 bg-soft-cream rounded-lg p-3 text-xs space-y-2 shadow-inner shadow-deep-teal/5">
-                                    <p class="text-deep-teal font-medium">Metrics:</p>
-                                    <div class="h-4 bg-deep-teal/10 rounded"></div>
-                                    <div class="h-4 w-5/6 bg-deep-teal/10 rounded"></div>
-                                    <div class="h-4 w-4/6 bg-deep-teal/10 rounded"></div>
-                                    <div class="pt-4"><p class="text-deep-teal font-medium">Layers:</p></div>
-                                    <div class="h-4 w-3/4 bg-deep-teal/10 rounded"></div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -104,26 +57,26 @@
                     <p class="text-xl text-deep-teal/80 max-w-3xl mx-auto">Govsplice handles terabytes of imagery and sensor streams with reliability, designed for civic and research cooperation.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                    <div class="bg-light-surface p-8 rounded-2xl border border-deep-teal/10 shadow-lg hover:shadow-accent-teal/10 transition duration-300 transform hover:scale-[1.01]">
+                    <div class="bg-light-surface p-8 rounded-2xl border border-deep-teal/10 shadow-lg transition duration-300 hover:scale-[1.01]">
                         <div class="text-accent-teal mb-4">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                         </div>
                         <h3 class="text-2xl font-semibold text-deep-teal mb-3">Vector & Raster Speed</h3>
                         <p class="text-deep-teal/70">Leverage native C++ bindings and parallel processing for operations that feel instantaneous, regardless of dataset size.</p>
                     </div>
-                    <div class="bg-light-surface p-8 rounded-2xl border border-deep-teal/10 shadow-lg hover:shadow-accent-teal/10 transition duration-300 transform hover:scale-[1.01]">
+                    <div class="bg-light-surface p-8 rounded-2xl border border-deep-teal/10 shadow-lg transition duration-300 hover:scale-[1.01]">
                         <div class="text-accent-teal mb-4">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 110 4h2a2 2 0 110 4h-2a2 2 0 110 4h2a2 2 0 110 4M10 10l3-3m-3 7l3 3"></path></svg>
                         </div>
                         <h3 class="text-2xl font-semibold text-deep-teal mb-3">API First Design</h3>
-                        <p class="text-deep-teal/70">Easily integrate with Python, R, and JavaScript. Build custom plugins and algorithms with our well-documented, stable core APIs.</p>
+                        <p class="text-deep-teal/70">Easily integrate with Python, R, and JavaScript. Build custom plugins and algorithms with our core APIs.</p>
                     </div>
-                    <div class="bg-light-surface p-8 rounded-2xl border border-deep-teal/10 shadow-lg hover:shadow-accent-teal/10 transition duration-300 transform hover:scale-[1.01]">
+                    <div class="bg-light-surface p-8 rounded-2xl border border-deep-teal/10 shadow-lg transition duration-300 hover:scale-[1.01]">
                         <div class="text-accent-teal mb-4">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.976v-1c0-2.21-1.79-4-4-4S7 2.83 7 5.05v1.27m8 8.24l-3-3m0 0l-3 3m3-3v12"></path></svg>
                         </div>
                         <h3 class="text-2xl font-semibold text-deep-teal mb-3">Cloud Optimized</h3>
-                        <p class="text-deep-teal/70">Native support for COGs, Zarr, and S3/Azure storage. Scale your analysis across serverless functions or Kubernetes clusters effortlessly.</p>
+                        <p class="text-deep-teal/70">Native support for COGs, Zarr, and S3 storage. Scale analysis across serverless functions effortlessly.</p>
                     </div>
                 </div>
             </div>
@@ -133,147 +86,146 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="text-center mb-16">
                     <h2 class="text-4xl font-extrabold text-deep-teal mb-4">Pricing Built for Open-Core Success</h2>
-                    <p class="text-xl text-deep-teal/80 max-w-3xl mx-auto">Choose the model that best fits your scale, security, and hosting needs.</p>
+                    <p class="text-xl text-deep-teal/80 max-w-3xl mx-auto">Choose the model that best fits your scale and hosting needs.</p>
                 </div>
                 <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:gap-12 max-w-4xl mx-auto">
-                    <div class="bg-soft-cream p-8 rounded-2xl border-4 border-accent-teal/50 shadow-2xl transition duration-300 hover:shadow-deep-teal/10">
+                    <div class="bg-soft-cream p-8 rounded-2xl border-4 border-accent-teal/50 shadow-2xl">
                         <h3 class="text-3xl font-extrabold text-deep-teal mb-3">Community Edition</h3>
-                        <p class="text-sm uppercase font-semibold text-deep-teal/70 mb-6">For enthusiasts & self-hosters</p>
                         <div class="text-5xl font-extrabold text-deep-teal mb-6">£0<span class="text-xl font-normal text-deep-teal/70">/mo</span></div>
                         <ul class="space-y-3 text-deep-teal/80 mb-8">
                             <li class="flex items-center space-x-2">
                                 <svg class="w-5 h-5 text-accent-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                <span>**Open-Source Core** features</span>
-                            </li>
-                            <li class="flex items-center space-x-2">
-                                <svg class="w-5 h-5 text-accent-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                <span>Self-hosted deployment (Docker)</span>
-                            </li>
-                            <li class="flex items-center space-x-2">
-                                <svg class="w-5 h-5 text-accent-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                <span>Unlimited users & data volume</span>
+                                <span>Self-hosted deployment</span>
                             </li>
                         </ul>
-                        <a href="#docs" class="block w-full text-center py-3 font-semibold rounded-xl text-deep-teal border-2 border-accent-teal/70 hover:bg-accent-teal/20 transition duration-200">View Source Code</a>
+                        <a href="#get-started" class="block w-full text-center py-3 font-semibold rounded-xl text-deep-teal border-2 border-accent-teal/70">Get Started</a>
                     </div>
-                    <div class="bg-soft-cream p-8 rounded-2xl border-4 border-accent-pink shadow-2xl transform scale-[1.03] shadow-accent-pink/20">
+                    <div class="bg-soft-cream p-8 rounded-2xl border-4 border-accent-pink shadow-2xl transform scale-[1.03]">
                         <h3 class="text-3xl font-extrabold text-deep-teal mb-3">Hosted Professional</h3>
-                        <p class="text-sm uppercase font-semibold text-deep-teal/70 mb-6">Fully managed service & enterprise features</p>
                         <div class="text-5xl font-extrabold text-deep-teal mb-6">£49<span class="text-xl font-normal text-deep-teal/70">/mo</span></div>
                         <ul class="space-y-3 text-deep-teal/80 mb-8">
                             <li class="flex items-center space-x-2">
                                 <svg class="w-5 h-5 text-accent-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                <span>**Hosted by us**, instant setup</span>
-                            </li>
-                            <li class="flex items-center space-x-2">
-                                <svg class="w-5 h-5 text-accent-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                <span>Dedicated email support (SLA)</span>
-                            </li>
-                            <li class="flex items-center space-x-2">
-                                <svg class="w-5 h-5 text-accent-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                <span>**Cancel anytime**</span>
+                                <span>Fully managed service</span>
                             </li>
                         </ul>
-                        <a href="#contact" class="block w-full text-center py-3 font-bold rounded-xl text-soft-cream bg-accent-pink hover:bg-fuchsia-400 transition duration-200 shadow-lg">Start Your Trial</a>
+                        <a href="#get-started" class="block w-full text-center py-3 font-bold rounded-xl text-soft-cream bg-accent-pink">Start Trial</a>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="resources" class="py-20 lg:py-28 bg-soft-cream">
+        <section id="get-started" class="auth-section">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-4xl font-extrabold text-deep-teal mb-4">Resources for Deeper Understanding</h2>
-                    <p class="text-xl text-deep-teal/80 max-w-3xl mx-auto">Dive into our extensive documentation, tutorials, and technical specifications.</p>
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-extrabold mb-4">Access Govsplice</h2>
+                    <p class="text-lg text-deep-teal/60">Log in to your dashboard or create a new community account.</p>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
-                    <div class="bg-light-surface p-10 rounded-2xl border border-deep-teal/10 shadow-xl">
-                        <div class="text-accent-teal mb-4">
-                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.493 9.332 5 7.81 5c-4.438 0-7.81 3.228-7.81 7.25s3.372 7.25 7.81 7.25c1.522 0 3.022-.493 4.19-1.253M12 6.253c1.168-.76 2.668-1.253 4.19-1.253 4.438 0 7.81 3.228 7.81 7.25s-3.372 7.25-7.81 7.25c-1.522 0-3.022-.493-4.19-1.253"></path></svg>
-                        </div>
-                        <h3 class="text-3xl font-extrabold text-deep-teal mb-4">Documentation & Setup</h3>
-                        <p class="text-lg text-deep-teal/80 mb-6">Start coding immediately with detailed guides, API references, and installation instructions.</p>
-                        <a href="#" class="inline-flex items-center text-accent-teal font-semibold group">
-                            Read the Docs <svg class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </a>
+                <div class="auth-container">
+                    <div class="auth-card-static">
+                        <h3 class="text-2xl font-bold mb-2">Login</h3>
+                        <p class="text-sm text-deep-teal/60 mb-6">Welcome back to Govsplice.</p>
+                        <form onsubmit="handleAuth(event, 'login')">
+                            <input type="text" name="username" placeholder="Email Address" class="auth-input" required>
+                            <input type="password" name="password" placeholder="Password" class="auth-input" required>
+                            <div id="login-error" class="error-msg"></div>
+                            <button type="submit" class="auth-btn bg-accent-teal">Login to Dashboard</button>
+                        </form>
                     </div>
-                    <div class="bg-light-surface p-10 rounded-2xl border border-deep-teal/10 shadow-xl">
-                        <div class="text-accent-teal mb-4">
-                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v18"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.827 10.999a.765.765 0 00-.76.763c0 1.255-.73 2.383-1.895 2.87-.935.395-2.028.598-3.172.598-2.67 0-4.838-2.16-4.838-4.83 0-2.67 2.168-4.838 4.838-4.838 1.144 0 2.237.203 3.172.598 1.165.487 1.895 1.615 1.895 2.87a.765.765 0 00.76.763z"></path></svg>
-                        </div>
-                        <h3 class="text-3xl font-extrabold text-deep-teal mb-4">Tutorials & Guides</h3>
-                        <p class="text-lg text-deep-teal/80 mb-6">Follow step-by-step guides to perform common geospatial analyses and integrate external libraries.</p>
-                        <a href="#" class="inline-flex items-center text-accent-teal font-semibold group">
-                            Watch Tutorials <svg class="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </a>
+                    <div class="auth-card-static">
+                        <h3 class="text-2xl font-bold mb-2 text-accent-pink">Sign Up</h3>
+                        <p class="text-sm text-deep-teal/60 mb-6">Create your community account.</p>
+                        <form onsubmit="handleAuth(event, 'signup')">
+                            <input type="text" name="name" placeholder="Full Name" class="auth-input" required>
+                            <input type="email" name="username" placeholder="Email Address" class="auth-input" required>
+                            <input type="password" name="password" placeholder="Create Password" class="auth-input" required>
+                            <div id="signup-error" class="error-msg"></div>
+                            <button type="submit" class="auth-btn bg-accent-pink">Create Free Account</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="community" class="py-20 lg:py-28 bg-soft-cream">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <div class="max-w-3xl mx-auto">
-                    <h2 class="text-4xl font-extrabold text-deep-teal mb-4">Join the Govsplice Community</h2>
-                    <p class="text-xl text-deep-teal/80 mb-8">Connect with other users, ask questions, and contribute to the core development of the platform.</p>
-                </div>
-                <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                    <a href="#" class="inline-flex items-center justify-center px-6 py-3 border-2 border-deep-teal/40 text-base font-medium rounded-xl text-deep-teal hover:bg-light-surface transition duration-300">GitHub (Source Code)</a>
-                    <a href="#" class="inline-flex items-center justify-center px-6 py-3 border-2 border-deep-teal/40 text-base font-medium rounded-xl text-deep-teal hover:bg-light-surface transition duration-300">Read the Blog</a>
+        <section id="resources" class="py-20 bg-soft-cream">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <h2 class="text-4xl font-extrabold mb-8">Resources</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl mx-auto">
+                    <div class="bg-light-surface p-10 rounded-2xl shadow-xl">
+                        <h3 class="text-2xl font-bold mb-4">Documentation</h3>
+                        <p class="mb-6">API references and setup guides.</p>
+                        <a href="#" class="text-accent-teal font-semibold">Read the Docs →</a>
+                    </div>
+                    <div class="bg-light-surface p-10 rounded-2xl shadow-xl">
+                        <h3 class="text-2xl font-bold mb-4">Tutorials</h3>
+                        <p class="mb-6">Step-by-step geospatial analysis.</p>
+                        <a href="#" class="text-accent-teal font-semibold">Watch Now →</a>
+                    </div>
                 </div>
             </div>
         </section>
-        
-        <section id="contact" class="py-20 lg:py-28 bg-light-surface">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-4xl font-extrabold text-deep-teal mb-4">Ready to Get Started?</h2>
-                <p class="text-xl text-deep-teal/80 mb-10">If you have questions about hosting, enterprise features, or professional services, contact us directly.</p>
-                <a href="#contact-form" class="inline-flex items-center justify-center px-10 py-4 border border-transparent text-lg font-bold rounded-xl shadow-2xl text-soft-cream bg-accent-pink hover:bg-fuchsia-400 transition duration-300 transform hover:scale-[1.05] shadow-accent-pink/50">Contact Sales</a>
-                
-                <div id="contact-form" class="mt-12 bg-soft-cream p-8 rounded-xl border border-deep-teal/10 shadow-lg">
-                    <h3 class="text-2xl font-semibold mb-6">Send us a Message</h3>
-                    <form class="space-y-4">
-                        <input type="text" placeholder="Your Name" class="w-full p-3 rounded-lg border-2 border-deep-teal/20 focus:ring-accent-teal focus:border-accent-teal transition duration-200 bg-soft-cream text-deep-teal/90" required>
-                        <input type="email" placeholder="Your Email" class="w-full p-3 rounded-lg border-2 border-deep-teal/20 focus:ring-accent-teal focus:border-accent-teal transition duration-200 bg-soft-cream text-deep-teal/90" required>
-                        <textarea rows="4" placeholder="Your Message or Inquiry" class="w-full p-3 rounded-lg border-2 border-deep-teal/20 focus:ring-accent-teal focus:border-accent-teal transition duration-200 bg-soft-cream text-deep-teal/90" required></textarea>
-                        <button type="submit" class="w-full py-3 font-bold rounded-xl text-soft-cream bg-accent-teal hover:bg-teal-500 transition duration-200">Submit Inquiry</button>
-                    </form>
-                </div>
+
+        <section id="contact" class="py-20 bg-light-surface">
+            <div class="max-w-3xl mx-auto px-4 text-center">
+                <h2 class="text-4xl font-extrabold mb-4">Contact Sales</h2>
+                <form class="mt-12 bg-soft-cream p-8 rounded-xl border border-deep-teal/10 shadow-lg space-y-4">
+                    <input type="text" placeholder="Your Name" class="w-full p-3 rounded-lg border-2 border-deep-teal/20 bg-soft-cream">
+                    <textarea placeholder="Message" class="w-full p-3 rounded-lg border-2 border-deep-teal/20 bg-soft-cream"></textarea>
+                    <button type="submit" class="w-full py-3 font-bold rounded-xl text-soft-cream bg-accent-teal">Submit Inquiry</button>
+                </form>
             </div>
         </section>
     </main>
 
-    <footer class="bg-light-surface border-t border-deep-teal/10 mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
-            <div class="mb-2">
-                <a href="#" class="text-xl font-extrabold text-deep-teal tracking-tighter">Gov<span class="text-accent-teal">splice</span></a>
-            </div>
-            <p class="text-sm text-deep-teal/60">© 2025 Govsplice.</p>
-        </div>
+    <footer class="bg-light-surface border-t border-deep-teal/10 py-10 text-center">
+        <p class="text-sm text-deep-teal/60">© 2025 Govsplice. Open-Core Public Data.</p>
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const button = document.getElementById('mobile-menu-button');
-            const menu = document.getElementById('mobile-menu');
-            button.addEventListener('click', () => {
-                const isExpanded = button.getAttribute('aria-expanded') === 'true' || false;
-                button.setAttribute('aria-expanded', !isExpanded);
-                if (menu.classList.contains('hidden')) {
-                    menu.classList.remove('hidden');
-                } else {
-                    menu.classList.add('hidden');
-                }
-            });
-            menu.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => {
-                    if (link.getAttribute('href').startsWith('#') && link.getAttribute('href').length > 1) {
-                        menu.classList.add('hidden');
-                        button.setAttribute('aria-expanded', 'false');
+        async function handleAuth(event, type) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const errorEl = document.getElementById(`${type}-error`);
+            errorEl.style.display = 'none';
+
+            const url = type === 'login' ? '/api/v1/login' : '/api/v1/signup';
+            let options = { method: 'POST' };
+
+            if (type === 'login') {
+                options.body = formData;
+            } else {
+                const data = Object.fromEntries(formData.entries());
+                options.headers = { 'Content-Type': 'application/json' };
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(url, options);
+                if (response.ok) {
+                    if (type === 'signup') {
+                        // After successful signup, immediately trigger login to get the token
+                        const loginData = new FormData();
+                        loginData.append('username', formData.get('username'));
+                        loginData.append('password', formData.get('password'));
+                        
+                        const loginResponse = await fetch('/api/v1/login', {
+                            method: 'POST',
+                            body: loginData
+                        });
+                        
+                        if (!loginResponse.ok) throw new Error("Auto-login failed");
                     }
-                });
-            });
-        });
+                    window.location.href = '/viewer';
+                } else {
+                    const err = await response.json();
+                    errorEl.innerText = err.detail || "Authentication failed.";
+                    errorEl.style.display = 'block';
+                }
+            } catch (e) {
+                errorEl.innerText = "Connection error. Is the server running?";
+                errorEl.style.display = 'block';
+            }
+        }
     </script>
 </body>
 </html>

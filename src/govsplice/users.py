@@ -1,20 +1,29 @@
-from pydantic import BaseModel
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+# /src/govsplice/users.py
+"""This module implements most of the backend for user accounts except the actual endpoints."""
+
 from datetime import datetime, timedelta
-from fastapi import FastAPI, Request, Depends, HTTPException, status
+
+from pydantic import BaseModel
+
+from jose import JWTError, jwt
+
+from passlib.context import CryptContext
+
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Request, Depends, HTTPException, status
 
 
-SECRET_KEY = "341965d7fde165fa036f6d5f47295ec2da7822d1b1726b5ceb8a860e765223ef"#CHANGE ME!!!
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from govsplice import config
+
+SECRET_KEY = config.SECRET_KEY
+ALGORITHM = config.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = config.ALGORITHM
 
 db = {
-    "A" : { ###so this top name is what is the actual username in the database i.e. the email
+    "A" : {
         "name" : "",
-        "username" : "A", #username is email must be the same as the main key
-        "hashPass":"$2b$12$Kgar3I37N9zxfkDnlHoQ4eUNIRDygrfbOAwEtuz9DFOg92XUowASu", #need to populate this from a signup password
+        "username" : "A", #Must be the same as the key in the top level dict
+        "hashPass":"$2b$12$Kgar3I37N9zxfkDnlHoQ4eUNIRDygrfbOAwEtuz9DFOg92XUowASu", #"admin"
         "subscribed": True
     }
 }
@@ -34,8 +43,13 @@ class User(BaseModel):
 class UserInDB(User):
     hashPass: str
 
+class UserCreate(BaseModel):
+    username: str
+    name: str
+    password: str
+
 pwdContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2Scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/token")
+oauth2Scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login")
 
 def check_pass(plainPass, hashedPass):
     return pwdContext.verify(plainPass, hashedPass)
@@ -62,31 +76,38 @@ def create_access_token(data: dict):
     toEncode.update({"exp":expire})
     return jwt.encode(toEncode, SECRET_KEY, algorithm=ALGORITHM)
 
-async def get_current_user(token: str = Depends(oauth2Scheme)):
-    credException = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+async def get_current_user(request: Request): # Change param from 'token' to 'request'
+    # 1. Try to get token from Header (standard)
+    auth_header = request.headers.get("Authorization")
+    
+    # 2. If no header, try to get it from Cookie
+    token = None
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+    else:
+        cookie_token = request.cookies.get("access_token")
+        if cookie_token and cookie_token.startswith("Bearer "):
+            token = cookie_token.split(" ")[1]
+
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
-            raise
-            raise credException
-        tokenData = TokenData(username=username)
+            raise HTTPException(status_code=401)
     except JWTError:
-        raise credException
+        raise HTTPException(status_code=401)
     
-    user = get_user(db, username=tokenData.username)
+    user = get_user(db, username=username)
     if user is None:
-        raise credException
+        raise HTTPException(status_code=401)
     
     return user
-
 
 async def get_current_subscribed_user(currentUser: UserInDB = Depends(get_current_user)):
     if not currentUser.subscribed:
         print("Not Subscribed")
         raise HTTPException(status_code=400)
     return currentUser
-
-# pwd = get_pass_hash("admin")
-# print(pwd)
-# #$2b$12$Kgar3I37N9zxfkDnlHoQ4eUNIRDygrfbOAwEtuz9DFOg92XUowASu

@@ -58,5 +58,8 @@ DATASET_MAPPINGS = {
     "simple_age_bins":data.Stat_AgeGenderBands2021
 }
 
+DOCS_OPEN_ACCESS = False
 
-####ADD DOCS CONTROL in configs as well as the security controlss.. add commented sections!!!!
+SECRET_KEY = "341965d7fde165fa036f6d5f47295ec2da7822d1b1726b5ceb8a860e765223ef"#CHANGE ME!!!
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30

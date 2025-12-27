@@ -4,18 +4,23 @@
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Depends, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Request, Depends, HTTPException, status, Response
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
-
-from datetime import datetime, timedelta
 
 import valhalla
 
 from govsplice import config, data, database
 from govsplice.local_types import GeoJSON, JSON, AsyncGenerator
-
-from govsplice.users import Token, auth_user, create_access_token, User, get_current_subscribed_user, db
+from govsplice.users import (Token,
+                             auth_user,
+                             create_access_token,
+                             User,
+                             get_current_subscribed_user,
+                             db,
+                             ACCESS_TOKEN_EXPIRE_MINUTES,
+                             UserCreate,
+                             get_pass_hash)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -49,6 +54,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         / "tiles"
         / "united-kingdom-latest.osm.pbf.tar"
     )
+
     if not app.state.tilePath.exists():
         config.Debug.log(
             "main.lifespan, Downloading OSM and building valhallah tiles, get read to wait a while!"
@@ -76,7 +82,61 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
 
-app = FastAPI(lifespan=lifespan)#, docs_url=None, redoc_url=None)
+app = FastAPI(lifespan=lifespan, docs_url=config.DOCS_OPEN_ACCESS, redoc_url=config.DOCS_OPEN_ACCESS)
+
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, callNext):
+    """Ask browsers not to cache pages."""
+    response = await callNext(request)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
+@app.post("/api/v1/login", response_model=Token)
+async def login_for_access_token(response: Response, formData: OAuth2PasswordRequestForm = Depends()):
+    """Check an attempted login and return an access token."""
+    user = auth_user(db, formData.username, formData.password)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    access_token = create_access_token(data={"sub":user.username})
+    response.set_cookie(
+        key="access_token", 
+        value=f"Bearer {access_token}", 
+        httponly=True,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES*60,
+        samesite="lax",
+        path="/"
+    )
+    return {"access_token":access_token, "token_type":"bearer"}
+
+
+@app.get("/api/v1/logout")
+async def logout(response: Response):
+    """Clears the access_token cookie to log out the user, then redirects to landing."""
+    redirect = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    redirect.delete_cookie(
+        key="access_token", 
+        path="/",
+        httponly=True,
+        samesite="lax"
+    )
+    return redirect
+
+@app.post("/api/v1/signup")
+async def signup(user_data: UserCreate):
+    """Accepts a new user signup and adds user to the database."""
+    if user_data.username in db:
+        raise HTTPException(status_code=400, detail="Email already in use.")
+    hashed_pass = get_pass_hash(user_data.password)
+    db[user_data.username] = {
+        "username": user_data.username,
+        "name": user_data.name,
+        "hashPass": hashed_pass,
+        "subscribed": True # CHANGE THIS TO FALSE WHEN IMPLEMENTING SUBS
+    }
+    return {"message": "User created successfully"}
 
 
 @app.get("/", response_class=FileResponse)
@@ -89,10 +149,11 @@ async def landing_page() -> FileResponse:
     return app.state.landingPageHTML
 
 
-@app.get("/viewer", response_class=FileResponse)#, response_model=User)
+@app.get("/viewer", response_class=FileResponse)
 async def viewer_page(current_user: User = Depends(get_current_subscribed_user)) -> FileResponse:
     """Return the logged-in single page file."""
     if config.Debug.DEBUG_RELOAD_FILES:
+        config.Debug.log("main.viewer_page, Dynamic reload")
         app.state.viewerPageHTML = FileResponse(
             path=app.state.viewerPagePath, media_type="text/html"
         )
@@ -159,11 +220,3 @@ async def simple_age_bins(jsonQuery: Request, current_user: User = Depends(get_c
     """
     queryArea = await jsonQuery.json()
     return {"simple_age_bins":app.state.database.area_stats(queryArea, "simple_age_bins")}
-
-@app.post("/api/v1/token", response_model=Token)
-async def login_for_access_token(formData: OAuth2PasswordRequestForm = Depends()):
-    user = auth_user(db, formData.username, formData.password)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    access_token = create_access_token(data={"sub":user.username})
-    return {"access_token":access_token, "token_type":"bearer"}
