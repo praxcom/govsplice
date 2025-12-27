@@ -58,8 +58,14 @@ DATASET_MAPPINGS = {
     "simple_age_bins":data.Stat_AgeGenderBands2021
 }
 
-DOCS_OPEN_ACCESS = False
+DOCS_OPEN_ACCESS = None #"/docs"
 
 SECRET_KEY = "341965d7fde165fa036f6d5f47295ec2da7822d1b1726b5ceb8a860e765223ef"#CHANGE ME!!!
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ADMIN_ACCOUNT = {
+    "name" : "",
+    "username" : "admin", #Must be the same as the key in the top level dict
+    "hashPass":"$2b$12$Kgar3I37N9zxfkDnlHoQ4eUNIRDygrfbOAwEtuz9DFOg92XUowASu", #"admin"
+    "subscribed": True
+}

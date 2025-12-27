@@ -17,7 +17,7 @@ from govsplice.users import (Token,
                              create_access_token,
                              User,
                              get_current_subscribed_user,
-                             db,
+                             ACCOUNTS,
                              ACCESS_TOKEN_EXPIRE_MINUTES,
                              UserCreate,
                              get_pass_hash)
@@ -80,9 +80,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     config.Debug.log("main.lifespan, Finished setting up server")
 
     yield
-
-
-app = FastAPI(lifespan=lifespan, docs_url=config.DOCS_OPEN_ACCESS, redoc_url=config.DOCS_OPEN_ACCESS)
+ 
+app = FastAPI(lifespan=lifespan, docs_url=config.DOCS_OPEN_ACCESS, redoc_url=None)
 
 @app.middleware("http")
 async def add_no_cache_headers(request: Request, callNext):
@@ -97,7 +96,7 @@ async def add_no_cache_headers(request: Request, callNext):
 @app.post("/api/v1/login", response_model=Token)
 async def login_for_access_token(response: Response, formData: OAuth2PasswordRequestForm = Depends()):
     """Check an attempted login and return an access token."""
-    user = auth_user(db, formData.username, formData.password)
+    user = auth_user(ACCOUNTS, formData.username, formData.password)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     access_token = create_access_token(data={"sub":user.username})
@@ -127,10 +126,10 @@ async def logout(response: Response):
 @app.post("/api/v1/signup")
 async def signup(user_data: UserCreate):
     """Accepts a new user signup and adds user to the database."""
-    if user_data.username in db:
+    if user_data.username in ACCOUNTS:
         raise HTTPException(status_code=400, detail="Email already in use.")
     hashed_pass = get_pass_hash(user_data.password)
-    db[user_data.username] = {
+    ACCOUNTS[user_data.username] = {
         "username": user_data.username,
         "name": user_data.name,
         "hashPass": hashed_pass,

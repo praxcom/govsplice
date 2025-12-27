@@ -1,6 +1,12 @@
 # /src/govsplice/users.py
 """This module implements most of the backend for user accounts except the actual endpoints."""
 
+import os
+
+from pathlib import Path
+
+from collections import UserDict
+
 from datetime import datetime, timedelta
 
 from pydantic import BaseModel
@@ -12,21 +18,46 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Request, Depends, HTTPException, status
 
+import json
 
 from govsplice import config
 
 SECRET_KEY = config.SECRET_KEY
 ALGORITHM = config.ALGORITHM
-ACCESS_TOKEN_EXPIRE_MINUTES = config.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = config.ACCESS_TOKEN_EXPIRE_MINUTES
 
-db = {
-    "A" : {
-        "name" : "",
-        "username" : "A", #Must be the same as the key in the top level dict
-        "hashPass":"$2b$12$Kgar3I37N9zxfkDnlHoQ4eUNIRDygrfbOAwEtuz9DFOg92XUowASu", #"admin"
-        "subscribed": True
-    }
-}
+# db = {
+#     "A" : {
+#         "name" : "",
+#         "username" : "A", #Must be the same as the key in the top level dict
+#         "hashPass":"$2b$12$Kgar3I37N9zxfkDnlHoQ4eUNIRDygrfbOAwEtuz9DFOg92XUowASu", #"admin"
+#         "subscribed": True
+#     }
+# }
+
+class AccountDB(UserDict):
+    def __init__(self, filePath: Path):
+        super().__init__()
+        self.filePath = filePath
+        self.load()
+    
+    def load(self):
+        if os.path.exists(self.filePath):
+            with open(self.filePath, "r") as f:
+                content = f.read()
+                self.data = json.loads(content)
+
+    def save(self):
+        with open(self.filePath, "w") as f:
+            json.dump(self.data, f, indent=4)
+        
+    def __setitem__(self, key, value):
+        ret = super().__setitem__(key, value)
+        self.save()
+        return ret
+    
+ACCOUNTS = AccountDB(Path(__file__).parent / "data" / "accounts" / "users.json")
+ACCOUNTS["admin"] = config.ADMIN_ACCOUNT
 
 class Token(BaseModel):
     access_token:str #this naming standard required for auth libraries
@@ -100,7 +131,7 @@ async def get_current_user(request: Request): # Change param from 'token' to 're
     except JWTError:
         raise HTTPException(status_code=401)
     
-    user = get_user(db, username=username)
+    user = get_user(ACCOUNTS, username=username)
     if user is None:
         raise HTTPException(status_code=401)
     
