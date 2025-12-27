@@ -147,6 +147,16 @@ async def landing_page() -> FileResponse:
         )
     return app.state.landingPageHTML
 
+@app.get("/assets", response_class=FileResponse)
+async def asset(assetName: str) -> FileResponse:
+    """Return binary assets by a keyword if they exist in a config mapping."""
+    if assetName in config.ASSET_MAP:
+        return FileResponse(
+            path=config.ASSET_MAP[assetName],
+            media_type="image/png"
+        )
+    raise HTTPException(status_code=404, detail="Not Found")
+        
 
 @app.get("/viewer", response_class=FileResponse)
 async def viewer_page(current_user: User = Depends(get_current_subscribed_user)) -> FileResponse:

@@ -69,3 +69,7 @@ ADMIN_ACCOUNT = {
     "hashPass":"$2b$12$Kgar3I37N9zxfkDnlHoQ4eUNIRDygrfbOAwEtuz9DFOg92XUowASu", #"admin"
     "subscribed": True
 }
+
+ASSET_MAP = {
+    "demo-img-1":Path(__file__).parent / "pages" / "assets" / "demo-img-1.png",
+}
