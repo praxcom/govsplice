@@ -4,9 +4,13 @@
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Depends, HTTPException, status, Response
+from fastapi import FastAPI, Request, Depends, HTTPException, status, Response, Form
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 import valhalla
 
@@ -83,6 +87,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
  
 app = FastAPI(lifespan=lifespan, docs_url=config.DOCS_OPEN_ACCESS, redoc_url=None)
 
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 @app.middleware("http")
 async def add_no_cache_headers(request: Request, callNext):
     """Ask browsers not to cache pages."""
@@ -92,9 +100,9 @@ async def add_no_cache_headers(request: Request, callNext):
     response.headers["Expires"] = "0"
     return response
 
-
 @app.post("/api/v1/login", response_model=Token)
-async def login_for_access_token(response: Response, formData: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("12/minute")
+async def login_for_access_token(request: Request, response: Response, formData: OAuth2PasswordRequestForm = Depends()):
     """Check an attempted login and return an access token."""
     user = auth_user(ACCOUNTS, formData.username, formData.password)
     if not user:
@@ -124,7 +132,8 @@ async def logout(response: Response):
     return redirect
 
 @app.post("/api/v1/signup")
-async def signup(user_data: UserCreate):
+@limiter.limit("12/minute")
+async def signup(request:Request, user_data: UserCreate):
     """Accepts a new user signup and adds user to the database."""
     if user_data.username in ACCOUNTS:
         raise HTTPException(status_code=400, detail="Email already in use.")
