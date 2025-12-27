@@ -2,17 +2,29 @@
 """This module contains the FastAPI endpoints."""
 
 from pathlib import Path
-
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, Request, Depends, HTTPException, status, Response, Form
+from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.security import OAuth2PasswordRequestForm
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 import valhalla
 
 from govsplice import config, data, database
 from govsplice.local_types import GeoJSON, JSON, AsyncGenerator
-
+from govsplice.users import (Token,
+                             auth_user,
+                             create_access_token,
+                             User,
+                             get_current_subscribed_user,
+                             ACCOUNTS,
+                             ACCESS_TOKEN_EXPIRE_MINUTES,
+                             UserCreate,
+                             get_pass_hash)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -46,6 +58,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         / "tiles"
         / "united-kingdom-latest.osm.pbf.tar"
     )
+
     if not app.state.tilePath.exists():
         config.Debug.log(
             "main.lifespan, Downloading OSM and building valhallah tiles, get read to wait a while!"
@@ -71,9 +84,67 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     config.Debug.log("main.lifespan, Finished setting up server")
 
     yield
+ 
+app = FastAPI(lifespan=lifespan, docs_url=config.DOCS_OPEN_ACCESS, redoc_url=None)
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, callNext):
+    """Ask browsers not to cache pages."""
+    response = await callNext(request)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+@app.post("/api/v1/login", response_model=Token)
+@limiter.limit("12/minute")
+async def login_for_access_token(request: Request, response: Response, formData: OAuth2PasswordRequestForm = Depends()):
+    """Check an attempted login and return an access token."""
+    user = auth_user(ACCOUNTS, formData.username, formData.password)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    access_token = create_access_token(data={"sub":user.username})
+    response.set_cookie(
+        key="access_token", 
+        value=f"Bearer {access_token}", 
+        httponly=True,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES*60,
+        samesite="lax",
+        path="/"
+    )
+    return {"access_token":access_token, "token_type":"bearer"}
 
 
-app = FastAPI(lifespan=lifespan)
+@app.get("/api/v1/logout")
+async def logout(response: Response):
+    """Clears the access_token cookie to log out the user, then redirects to landing."""
+    redirect = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    redirect.delete_cookie(
+        key="access_token", 
+        path="/",
+        httponly=True,
+        samesite="lax"
+    )
+    return redirect
+
+@app.post("/api/v1/signup")
+@limiter.limit("12/minute")
+async def signup(request:Request, user_data: UserCreate):
+    """Accepts a new user signup and adds user to the database."""
+    if user_data.username in ACCOUNTS:
+        raise HTTPException(status_code=400, detail="Email already in use.")
+    hashed_pass = get_pass_hash(user_data.password)
+    ACCOUNTS[user_data.username] = {
+        "username": user_data.username,
+        "name": user_data.name,
+        "hashPass": hashed_pass,
+        "subscribed": True # CHANGE THIS TO FALSE WHEN IMPLEMENTING SUBS
+    }
+    return {"message": "User created successfully"}
 
 
 @app.get("/", response_class=FileResponse)
@@ -85,11 +156,22 @@ async def landing_page() -> FileResponse:
         )
     return app.state.landingPageHTML
 
+@app.get("/assets", response_class=FileResponse)
+async def asset(assetName: str) -> FileResponse:
+    """Return binary assets by a keyword if they exist in a config mapping."""
+    if assetName in config.ASSET_MAP:
+        return FileResponse(
+            path=config.ASSET_MAP[assetName],
+            media_type="image/png"
+        )
+    raise HTTPException(status_code=404, detail="Not Found")
+        
 
 @app.get("/viewer", response_class=FileResponse)
-async def viewer_page() -> FileResponse:
+async def viewer_page(current_user: User = Depends(get_current_subscribed_user)) -> FileResponse:
     """Return the logged-in single page file."""
     if config.Debug.DEBUG_RELOAD_FILES:
+        config.Debug.log("main.viewer_page, Dynamic reload")
         app.state.viewerPageHTML = FileResponse(
             path=app.state.viewerPagePath, media_type="text/html"
         )
@@ -108,7 +190,7 @@ async def style_sheet() -> FileResponse:
 
 @app.get("/api/v1/isochrone")
 async def isochrone(
-    eType: str, mode: str, extent: float, lat: float, lon: float
+    eType: str, mode: str, extent: float, lat: float, lon: float, current_user: User = Depends(get_current_subscribed_user)
 ) -> GeoJSON:
     """Get an isochrone or isodistance geoJson boundary.
 
@@ -142,7 +224,7 @@ async def isochrone(
 
 
 @app.post("/api/v1/simple_age_bins")
-async def simple_age_bins(jsonQuery: Request) -> JSON:
+async def simple_age_bins(jsonQuery: Request, current_user: User = Depends(get_current_subscribed_user)) -> JSON:
     """Returns counts of male and female (& total) in different age categories for a queried boundary.
 
     Parameters

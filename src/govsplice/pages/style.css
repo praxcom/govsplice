@@ -297,3 +297,74 @@ body.map-view, html.map-view {
         transform: translateX(310px);
     }
 }
+
+
+/* =========================================
+   AUTH SECTION & SIDE-BY-SIDE CARDS (NEW ADDITION)
+   ========================================= */
+.auth-section {
+    padding: 80px 20px;
+    background-color: var(--light-surface);
+    border-top: 1px solid rgba(44, 62, 80, 0.1);
+}
+
+.auth-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns for cards */
+    gap: 40px;
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.auth-card-static {
+    background-color: var(--soft-cream);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(44, 62, 80, 0.1);
+}
+
+.auth-input {
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    border: 2px solid rgba(44, 62, 80, 0.1);
+    background: white;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.auth-input:focus {
+    border-color: var(--accent-teal);
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    color: white;
+    transition: transform 0.2s, opacity 0.2s;
+    cursor: pointer;
+    border: none;
+}
+
+.auth-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.error-msg {
+    color: var(--accent-pink);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    display: none;
+    font-weight: 600;
+}
