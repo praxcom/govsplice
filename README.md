@@ -12,3 +12,5 @@ TO GET SECRET KEY:`openssl rand -hex 32`
 `docker run "name:tag"`
 
 `docker run -p 80:80 "tag:name"` port forward
+
+`sudo docker run -it mvp /bin/bash`

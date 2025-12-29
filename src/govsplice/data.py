@@ -329,5 +329,5 @@ class Stat_AgeGenderBands2021(Boundary_LSOACensus2021):
 if __name__ == "__main__":
     a = Stat_AgeGenderBands2021()
     a.download_stats()
-    a.download_download_boundaries()
+    a.download_boundaries()
     print("DONWLOADED")

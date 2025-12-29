@@ -40,6 +40,7 @@ ENV CONDA_DEFAULT_ENV=govsplice
 ENV PATH=$CONDA_DIR/envs/govsplice/bin:$PATH
 
 # Open socket
-EXPOSE 8000
+EXPOSE 80
 
-# CMD ["python", "govsplice"]
+RUN chmod +x init.sh
+CMD ["init.sh"]
