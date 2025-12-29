@@ -323,3 +323,11 @@ class Stat_AgeGenderBands2021(Boundary_LSOACensus2021):
         """Load the 2021 census age bands to a local csv to a GeoDataFrame"""
         config.Debug.log("data.Stat_AgeGenderBands2021.load_stats, Loading local stats for 2024 Age by gender bands for 2021 LSOA bounds.")
         self.rawStats = gpd.GeoDataFrame.from_file(self.statsFilePath)
+
+
+
+if __name__ == "__main__":
+    a = Stat_AgeGenderBands2021()
+    a.download_stats()
+    a.download_download_boundaries()
+    print("DONWLOADED")
